@@ -9,8 +9,12 @@
  *****************************************************************************/
 package org.picocontainer;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * Collection of immutable properties, holding behaviour characteristics.  See 
@@ -35,7 +39,7 @@ public final class Characteristics {
     private static final String _HIDE_IMPL = "hide-impl";
     private static final String _PROPERTY_APPLYING = "property-applying";
     private static final String _AUTOMATIC = "automatic";
-    private static final String _USE_NAMES = "use-parameter-names";    
+    private static final String _USE_NAMES = "use-parameter-names";
     private static final String _ENABLE_CIRCULAR = "enable-circular";
     private static final String _GUARD = "guard";
     private static final String _EMJECTION = "emjection_enabled";
@@ -182,20 +186,112 @@ public final class Characteristics {
      * throw UnsupportedOperationException.
      * @author Paul Hammant.
      */
+    @SuppressWarnings({"unused", "unchecked"})
     public static class ImmutableProperties extends Properties {
-        
-        private boolean sealed = false;
+
+        private final Map<Object, Object> store;
+
+        private final Set<String> stringNameSet;
+
+        @Override
+        public int size() {
+            return store.size();
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return store.isEmpty();
+        }
+
+        @Override
+        public Enumeration<Object> keys() {
+            return Collections.enumeration(store.keySet());
+        }
+
+        @Override
+        public Enumeration<Object> elements() {
+            return Collections.enumeration(store.values());
+        }
+
+        @Override
+        public boolean contains(Object value) {
+            return containsValue(value);
+        }
+
+        @Override
+        public boolean containsValue(Object value) {
+            return store.containsValue(value);
+        }
+
+        @Override
+        public boolean containsKey(Object key) {
+            return store.containsKey(key);
+        }
+
+        @Override
+        public Object get(Object key) {
+            return store.get(key);
+        }
+
+        @Override
+        public Object clone() {
+            Map.Entry entry = store.entrySet().iterator().next();
+            return new ImmutableProperties((String) entry.getKey(), (String) entry.getValue());
+        }
+
+        @Override
+        public String toString() {
+            return store.toString();
+        }
+
+        @Override
+        public Set<Object> keySet() {
+            return store.keySet();
+        }
+
+        @Override
+        public Set<Map.Entry<Object, Object>> entrySet() {
+            return store.entrySet();
+        }
+
+        @Override
+        public Collection<Object> values() {
+            return store.values();
+        }
+
+        @Override
+        public Set<String> stringPropertyNames() {
+            return stringNameSet;
+        }
+
+        @Override
+        public Enumeration<?> propertyNames() {
+            return Collections.enumeration(store.keySet());
+        }
+
+        @Override
+        public String getProperty(String key, String defaultValue) {
+            String value = getProperty(key);
+            return value != null ? value : defaultValue;
+        }
+
+        @Override
+        public String getProperty(String key) {
+            return (String) store.get(key);
+        }
 
         public ImmutableProperties(String name, String value) {
-            super.setProperty(name, value);
-            sealed = true;
+            super();
+            super.put(name, value);
+
+            store = Collections.singletonMap((Object)name, (Object)value);
+            stringNameSet = Collections.singleton(name);
         }
-        
+
         /**
          * Read Only Object:  will throw UnsupportedOperationException.
          */
         @Override
-        @SuppressWarnings("unused")
         public Object remove( Object o) {
             throw new UnsupportedOperationException("immutable properties are read only");
         }
@@ -204,8 +300,7 @@ public final class Characteristics {
          * Read Only Object:  will throw UnsupportedOperationException.
          */
         @Override
-        @SuppressWarnings("unused")
-        public synchronized Object setProperty(String string, String string1) {
+        public Object setProperty(String string, String string1) {
             throw new UnsupportedOperationException("immutable properties are read only");
         }
 
@@ -213,22 +308,12 @@ public final class Characteristics {
          * Read Only Object:  will throw UnsupportedOperationException.
          */
 		@Override
-		public synchronized void clear() {
+		public void clear() {
             throw new UnsupportedOperationException("immutable properties are read only");
 		}
 
-		/**
-		 * Once object is constructed, this will throw UnsupportedOperationException because
-		 * this class is a read only wrapper.
-		 */
 		@Override
-		public synchronized Object put(Object key, Object value) {
-			if (!sealed) {
-				//setProperty calls put, so until the object is fully constructed, we 
-				//cannot seal it.
-				return super.put(key, value);
-			}
-			
+		public Object put(Object key, Object value) {
             throw new UnsupportedOperationException("immutable properties are read only");
 		}
 
@@ -236,12 +321,11 @@ public final class Characteristics {
          * Read Only Object:  will throw UnsupportedOperationException.
          */
 		@Override
-		@SuppressWarnings("unused")
-		public synchronized void putAll(Map<? extends Object, ? extends Object> t) {
+		public void putAll(Map<? extends Object, ? extends Object> t) {
             throw new UnsupportedOperationException("immutable properties are read only");
 		}
-        
-        
+
+
     }
 
 }
